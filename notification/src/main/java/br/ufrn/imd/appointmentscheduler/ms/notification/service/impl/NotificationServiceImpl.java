@@ -17,7 +17,7 @@ public class NotificationServiceImpl implements NotificationService {
 //    private final EmailService emailService;
 //    private final boolean mailingEnabled;
 
-    public NotificationServiceImpl(@Value("${mailing.enabled}") boolean mailingEnabled, NotificationRepository notificationRepository, UserService userService, EmailService emailService) {
+    public NotificationServiceImpl(@Value("${mailing.enabled}") boolean mailingEnabled, NotificationRepository notificationRepository) {
 //        this.mailingEnabled = mailingEnabled;
         this.notificationRepository = notificationRepository;
 //        this.userService = userService;
@@ -25,16 +25,15 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void newNotification(String title, String message, String url, User user) {
+    public void newNotification(String title, String message, String url, int userId) {
         Notification notification = new Notification();
         notification.setTitle(title);
         notification.setUrl(url);
         notification.setCreatedAt(new Date());
         notification.setMessage(message);
-        notification.setUser(user);
+        notification.setUserId(userId);
         notificationRepository.save(notification);
     }
-
 
     @Override
     public void markAsRead(int notificationId, int userId) {
@@ -43,7 +42,7 @@ public class NotificationServiceImpl implements NotificationService {
             notification.setRead(true);
             notificationRepository.save(notification);
         } else {
-            throw new org.springframework.security.access.AccessDeniedException("Unauthorized");
+            //throw new org.springframework.security.access.AccessDeniedException("Unauthorized");
         }
     }
 
@@ -63,13 +62,16 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<Notification> getAll(int userId) {
-//        return userService.getUserById(userId).getNotifications();
+    	return notificationRepository.getAllByUserId(userId);
     }
 
     @Override
     public List<Notification> getUnreadNotifications(int userId) {
         return notificationRepository.getAllUnreadNotifications(userId);
     }
+    
+   
+
 //
 //    @Override
 //    public void newAppointmentFinishedNotification(Appointment appointment, boolean sendEmail) {
@@ -192,4 +194,5 @@ public class NotificationServiceImpl implements NotificationService {
 //        }
 //    }
 
+	
 }

@@ -1,6 +1,6 @@
 package br.ufrn.imd.appointmentscheduler.ms.notification.controller;
 
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+//import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,29 +18,27 @@ import br.ufrn.imd.appointmentscheduler.ms.notification.service.NotificationServ
 public class NotificationController {
 
     private final NotificationService notificationService;
-//    private final UserService userService;
 
-    public NotificationController(NotificationService notificationService, UserService userService) {
+    public NotificationController(NotificationService notificationService) {
         this.notificationService = notificationService;
-//        this.userService = userService;
     }
 
     @GetMapping()
-    public String showUserNotificationList(Model model, @AuthenticationPrincipal CustomUserDetails currentUser) {
-        model.addAttribute("notifications", userService.getUserById(currentUser.getId()).getNotifications());
+    public String showUserNotificationList(Model model, int userId) {
+        model.addAttribute("notifications", notificationService.getAll(userId));
         return "notifications/listNotifications";
     }
 
     @GetMapping("/{notificationId}")
-    public String showNotification(@PathVariable("notificationId") int notificationId, @AuthenticationPrincipal CustomUserDetails currentUser) {
+    public String showNotification(@PathVariable("notificationId") int notificationId, int userId) {
         Notification notification = notificationService.getNotificationById(notificationId);
-        notificationService.markAsRead(notificationId, currentUser.getId());
+        notificationService.markAsRead(notificationId, userId);
         return "redirect:" + notification.getUrl();
     }
 
     @PostMapping("/markAllAsRead")
-    public String processMarkAllAsRead(@AuthenticationPrincipal CustomUserDetails currentUser) {
-        notificationService.markAllAsRead(currentUser.getId());
+    public String processMarkAllAsRead(int userId) {
+        notificationService.markAllAsRead(userId);
         return "redirect:/notifications";
     }
 }
