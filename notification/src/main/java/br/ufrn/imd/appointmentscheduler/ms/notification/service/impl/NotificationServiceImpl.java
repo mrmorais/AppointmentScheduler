@@ -17,7 +17,7 @@ public class NotificationServiceImpl implements NotificationService {
 //    private final EmailService emailService;
 //    private final boolean mailingEnabled;
 
-    public NotificationServiceImpl(@Value("${mailing.enabled}") boolean mailingEnabled, NotificationRepository notificationRepository) {
+    public NotificationServiceImpl(NotificationRepository notificationRepository) {
 //        this.mailingEnabled = mailingEnabled;
         this.notificationRepository = notificationRepository;
 //        this.userService = userService;
