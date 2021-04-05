@@ -1,5 +1,7 @@
 package br.ufrn.imd.appointmentscheduler.ms.notification.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 //import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,7 +42,7 @@ public class NotificationController {
     	return new ResponseEntity<>(requestBody, HttpStatus.OK);
     }
     
-    @GetMapping("/user/{userId}/not/{notificationId}")
+    @GetMapping("/user/{userId}/notification/{notificationId}")
     public ResponseEntity<Notification> getNotificationById(
     		@PathVariable("notificationId") int notificationId,
     		@PathVariable("userId") int userId) {
@@ -49,24 +51,34 @@ public class NotificationController {
     	
     	return new ResponseEntity<Notification>(notification, HttpStatus.OK);
     }
-    
 
-//    @GetMapping()
-//    public String showUserNotificationList(Model model, int userId) {
-//        model.addAttribute("notifications", notificationService.getAll(userId));
-//        return "notifications/listNotifications";
-//    }
-//
-//    @GetMapping("/{notificationId}")
-//    public String showNotification(@PathVariable("notificationId") int notificationId, int userId) {
-//        Notification notification = notificationService.getNotificationById(notificationId);
-//        notificationService.markAsRead(notificationId, userId);
-//        return "redirect:" + notification.getUrl();
-//    }
-//
-//    @PostMapping("/markAllAsRead")
-//    public String processMarkAllAsRead(int userId) {
-//        notificationService.markAllAsRead(userId);
-//        return "redirect:/notifications";
-//    }
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Notification>> getAll(
+    		@PathVariable("userId") int userId) {
+    	List<Notification> notifications = notificationService.getAll(userId);
+    	return new ResponseEntity<>(notifications, HttpStatus.OK);
+    }
+    
+    @GetMapping("/user/{userId}/unread")
+    public ResponseEntity<List<Notification>> getUnreadNotifications(
+    		@PathVariable("userId") int userId) {
+    	List<Notification> unreadNotifications = notificationService.getUnreadNotifications(userId);
+    	return new ResponseEntity<>(unreadNotifications, HttpStatus.OK);
+    }
+    
+    @PostMapping("/user/{userId}/notification/{notificationId}/markAsRead")
+    public ResponseEntity<SuccessWrapper> markAsRead(
+    		@PathVariable("notificationId") int notificationId,
+    		@PathVariable("userId") int userId) {
+    	notificationService.markAsRead(notificationId, userId);
+    	
+    	return new ResponseEntity<SuccessWrapper>(new SuccessWrapper(), HttpStatus.OK);
+    }
+    
+    @PostMapping("/user/{userId}/markAllAsRead")
+    public ResponseEntity<SuccessWrapper> markAllAsRead(
+    		@PathVariable("userId") int userId) {
+    	notificationService.markAllAsRead(userId);
+    	return new ResponseEntity<>(new SuccessWrapper(), HttpStatus.OK);
+    }
 }
