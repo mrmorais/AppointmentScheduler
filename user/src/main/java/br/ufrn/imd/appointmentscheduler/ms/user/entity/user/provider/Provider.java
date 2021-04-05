@@ -1,5 +1,6 @@
 package br.ufrn.imd.appointmentscheduler.ms.user.entity.user.provider;
 
+import br.ufrn.imd.appointmentscheduler.ms.user.entity.Work;
 //import br.ufrn.imd.appointmentscheduler.ms.user.entity.Appointment;
 //import br.ufrn.imd.appointmentscheduler.ms.user.entity.Work;
 import br.ufrn.imd.appointmentscheduler.ms.user.entity.WorkingPlan;
@@ -21,9 +22,9 @@ public class Provider extends User {
 //    @OneToMany(mappedBy = "provider")
 //    private List<Appointment> appointments;
 //
-//    @ManyToMany
-//    @JoinTable(name = "works_providers", joinColumns = @JoinColumn(name = "id_user"), inverseJoinColumns = @JoinColumn(name = "id_work"))
-//    private List<Work> works;
+    @ManyToMany
+    @JoinTable(name = "works_providers", joinColumns = @JoinColumn(name = "id_user"), inverseJoinColumns = @JoinColumn(name = "id_work"))
+    private List<Work> works;
 
     @OneToOne(mappedBy = "provider", cascade = {CascadeType.ALL})
     private WorkingPlan workingPlan;

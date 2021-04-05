@@ -1,5 +1,6 @@
 package br.ufrn.imd.appointmentscheduler.ms.user.service;
 
+import br.ufrn.imd.appointmentscheduler.ms.user.entity.Work;
 //import br.ufrn.imd.appointmentscheduler.ms.user.entity.Work;
 import br.ufrn.imd.appointmentscheduler.ms.user.entity.user.Role;
 import br.ufrn.imd.appointmentscheduler.ms.user.entity.user.User;
@@ -38,7 +39,7 @@ public interface UserService {
 
     List<Provider> getProvidersWithCorporateWorks();
 
-//    List<Provider> getProvidersByWork(Work work);
+    List<Provider> getProvidersByWork(Work work);
 
     List<Provider> getAllProviders();
 
