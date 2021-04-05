@@ -61,7 +61,7 @@ public class InvoiceController {
             InputStreamResource isr = new InputStreamResource(new FileInputStream(invoicePdf));
             return new ResponseEntity<>(isr, respHeaders, HttpStatus.OK);
         } catch (FileNotFoundException e) {
-            log.error("Error while generating pdf for download, error: {} ", e);
+//            log.error("Error while generating pdf for download, error: {} ", e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

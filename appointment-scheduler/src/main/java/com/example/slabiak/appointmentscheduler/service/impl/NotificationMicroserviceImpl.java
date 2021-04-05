@@ -1,77 +1,90 @@
 package com.example.slabiak.appointmentscheduler.service.impl;
 
-import com.example.slabiak.appointmentscheduler.dao.NotificationRepository;
-import com.example.slabiak.appointmentscheduler.entity.*;
-import com.example.slabiak.appointmentscheduler.entity.user.User;
-import com.example.slabiak.appointmentscheduler.service.EmailService;
-import com.example.slabiak.appointmentscheduler.service.NotificationService;
-import com.example.slabiak.appointmentscheduler.service.UserService;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import java.util.Date;
 import java.util.List;
 
-public class NotificationServiceImpl implements NotificationService {
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Service;
+import com.example.slabiak.appointmentscheduler.entity.Appointment;
+import com.example.slabiak.appointmentscheduler.entity.ChatMessage;
+import com.example.slabiak.appointmentscheduler.entity.ExchangeRequest;
+import com.example.slabiak.appointmentscheduler.entity.Invoice;
+import com.example.slabiak.appointmentscheduler.entity.Notification;
+import com.example.slabiak.appointmentscheduler.entity.user.User;
+import com.example.slabiak.appointmentscheduler.service.NotificationService;
 
-    private final NotificationRepository notificationRepository;
-    private final UserService userService;
-    private final EmailService emailService;
-    private final boolean mailingEnabled;
+@Service
+public class NotificationMicroserviceImpl implements NotificationService {
+	
+	private final String NOTIFICATION_URL;
+	private final CloseableHttpClient httpClient;
+	
+	@Autowired
+	private Environment env;
+	
+	public NotificationMicroserviceImpl() {
+		this.NOTIFICATION_URL = "http://localhost:8081/notification";
+		this.httpClient = HttpClients.createDefault();
+	}
 
-    public NotificationServiceImpl(@Value("${mailing.enabled}") boolean mailingEnabled, NotificationRepository notificationRepository, UserService userService, EmailService emailService) {
-        this.mailingEnabled = mailingEnabled;
-        this.notificationRepository = notificationRepository;
-        this.userService = userService;
-        this.emailService = emailService;
-    }
+	@Override
+	public void newNotification(String title, String message, String url, User user) {
+		try {
+			HttpPost httpPost = new HttpPost(NOTIFICATION_URL);
+			httpPost.setHeader("Accept", "application/json");
+			httpPost.setHeader("Content-type", "application/json");
+			
+			String json = "{\r\n" +
+					" \"title\": \""+ title +"\"\r\n" +
+					" \"message\": \"" + message + "\"\r\n" +
+					" \"url\": \""+ url +"\"\r\n" +
+					" \"userId\" " + user.getId() + "\r\n" +
+					"}";
+			
+			StringEntity stringEntity = new StringEntity(json);
+			httpPost.setEntity(stringEntity);
+			
+			httpClient.execute(httpPost);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
-    @Override
-    public void newNotification(String title, String message, String url, User user) {
-        Notification notification = new Notification();
-        notification.setTitle(title);
-        notification.setUrl(url);
-        notification.setCreatedAt(new Date());
-        notification.setMessage(message);
-        notification.setUser(user);
-        notificationRepository.save(notification);
-    }
+	@Override
+	public void markAsRead(int notificationId, int userId) {
+		// TODO Auto-generated method stub
+		
+	}
 
+	@Override
+	public void markAllAsRead(int userId) {
+		// TODO Auto-generated method stub
+		
+	}
 
-    @Override
-    public void markAsRead(int notificationId, int userId) {
-        Notification notification = notificationRepository.getOne(notificationId);
-        if (notification.getUser().getId() == userId) {
-            notification.setRead(true);
-            notificationRepository.save(notification);
-        } else {
-            throw new org.springframework.security.access.AccessDeniedException("Unauthorized");
-        }
-    }
+	@Override
+	public Notification getNotificationById(int notificationId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public void markAllAsRead(int userId) {
-        List<Notification> notifications = notificationRepository.getAllUnreadNotifications(userId);
-        for (Notification notification : notifications) {
-            notification.setRead(true);
-            notificationRepository.save(notification);
-        }
-    }
+	@Override
+	public List<Notification> getAll(int userId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public Notification getNotificationById(int notificationId) {
-        return notificationRepository.getOne(notificationId);
-    }
-
-    @Override
-    public List<Notification> getAll(int userId) {
-        return userService.getUserById(userId).getNotifications();
-    }
-
-    @Override
-    public List<Notification> getUnreadNotifications(int userId) {
-        return notificationRepository.getAllUnreadNotifications(userId);
-    }
+	@Override
+	public List<Notification> getUnreadNotifications(int userId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 
     @Override
     public void newAppointmentFinishedNotification(Appointment appointment, boolean sendEmail) {
@@ -79,10 +92,6 @@ public class NotificationServiceImpl implements NotificationService {
         String message = "Appointment finished, you can reject that it took place until " + appointment.getEnd().plusHours(24).toString();
         String url = "/appointments/" + appointment.getId();
         newNotification(title, message, url, appointment.getCustomer());
-        if (sendEmail && mailingEnabled) {
-            emailService.sendAppointmentFinishedNotification(appointment);
-        }
-
     }
 
     @Override
@@ -91,9 +100,6 @@ public class NotificationServiceImpl implements NotificationService {
         String message = appointment.getCustomer().getFirstName() + " " + appointment.getCustomer().getLastName() + "rejected an appointment. Your approval is required";
         String url = "/appointments/" + appointment.getId();
         newNotification(title, message, url, appointment.getProvider());
-        if (sendEmail && mailingEnabled) {
-            emailService.sendAppointmentRejectionRequestedNotification(appointment);
-        }
     }
 
     @Override
@@ -102,9 +108,6 @@ public class NotificationServiceImpl implements NotificationService {
         String message = "New appointment scheduled with" + appointment.getCustomer().getFirstName() + " " + appointment.getProvider().getLastName() + " on " + appointment.getStart().toString();
         String url = "/appointments/" + appointment.getId();
         newNotification(title, message, url, appointment.getProvider());
-        if (sendEmail && mailingEnabled) {
-            emailService.sendNewAppointmentScheduledNotification(appointment);
-        }
     }
 
     @Override
@@ -113,9 +116,6 @@ public class NotificationServiceImpl implements NotificationService {
         String message = appointment.getCustomer().getFirstName() + " " + appointment.getCustomer().getLastName() + " cancelled appointment scheduled at " + appointment.getStart().toString();
         String url = "/appointments/" + appointment.getId();
         newNotification(title, message, url, appointment.getProvider());
-        if (sendEmail && mailingEnabled) {
-            emailService.sendAppointmentCanceledByCustomerNotification(appointment);
-        }
     }
 
     @Override
@@ -124,9 +124,6 @@ public class NotificationServiceImpl implements NotificationService {
         String message = appointment.getProvider().getFirstName() + " " + appointment.getProvider().getLastName() + " cancelled appointment scheduled at " + appointment.getStart().toString();
         String url = "/appointments/" + appointment.getId();
         newNotification(title, message, url, appointment.getCustomer());
-        if (sendEmail && mailingEnabled) {
-            emailService.sendAppointmentCanceledByProviderNotification(appointment);
-        }
     }
 
     public void newInvoice(Invoice invoice, boolean sendEmail) {
@@ -134,9 +131,6 @@ public class NotificationServiceImpl implements NotificationService {
         String message = "New invoice has been issued for you";
         String url = "/invoices/" + invoice.getId();
         newNotification(title, message, url, invoice.getAppointments().get(0).getCustomer());
-        if (sendEmail && mailingEnabled) {
-            emailService.sendInvoice(invoice);
-        }
     }
 
     @Override
@@ -145,9 +139,6 @@ public class NotificationServiceImpl implements NotificationService {
         String message = "One of the users sent you a request to exchange his appointment with your appointment";
         String url = "/appointments/" + newAppointment.getId();
         newNotification(title, message, url, newAppointment.getCustomer());
-        if (sendEmail && mailingEnabled) {
-            emailService.sendNewExchangeRequestedNotification(oldAppointment, newAppointment);
-        }
     }
 
     @Override
@@ -156,9 +147,6 @@ public class NotificationServiceImpl implements NotificationService {
         String message = "Someone accepted your appointment exchange request from " + exchangeRequest.getRequested().getStart() + " to " + exchangeRequest.getRequestor().getStart();
         String url = "/appointments/" + exchangeRequest.getRequested();
         newNotification(title, message, url, exchangeRequest.getRequested().getCustomer());
-        if (sendEmail && mailingEnabled) {
-            emailService.sendExchangeRequestAcceptedNotification(exchangeRequest);
-        }
     }
 
     @Override
@@ -167,9 +155,6 @@ public class NotificationServiceImpl implements NotificationService {
         String message = "Someone rejected your appointment exchange request from " + exchangeRequest.getRequestor().getStart() + " to " + exchangeRequest.getRequested().getStart();
         String url = "/appointments/" + exchangeRequest.getRequestor();
         newNotification(title, message, url, exchangeRequest.getRequestor().getCustomer());
-        if (sendEmail && mailingEnabled) {
-            emailService.sendExchangeRequestRejectedNotification(exchangeRequest);
-        }
     }
 
     @Override
@@ -178,9 +163,6 @@ public class NotificationServiceImpl implements NotificationService {
         String message = "You provider accepted your rejection request";
         String url = "/appointments/" + appointment.getId();
         newNotification(title, message, url, appointment.getCustomer());
-        if (sendEmail && mailingEnabled) {
-            emailService.sendAppointmentRejectionAcceptedNotification(appointment);
-        }
     }
 
     @Override
@@ -189,9 +171,5 @@ public class NotificationServiceImpl implements NotificationService {
         String message = "You have new chat message from " + chatMessage.getAuthor().getFirstName() + " regarding appointment scheduled at " + chatMessage.getAppointment().getStart();
         String url = "/appointments/" + chatMessage.getAppointment().getId();
         newNotification(title, message, url, chatMessage.getAuthor() == chatMessage.getAppointment().getProvider() ? chatMessage.getAppointment().getCustomer() : chatMessage.getAppointment().getProvider());
-        if (sendEmail && mailingEnabled) {
-            emailService.sendNewChatMessageNotification(chatMessage);
-        }
     }
-
 }

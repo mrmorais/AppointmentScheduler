@@ -53,7 +53,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
             Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
-            log.error("Error while token {} validation, error is {}", token, e.getMessage());
+//            log.error("Error while token {} validation, error is {}", token, e.getMessage());
         }
         return false;
 
