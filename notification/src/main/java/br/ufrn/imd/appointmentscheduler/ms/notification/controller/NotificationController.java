@@ -49,7 +49,7 @@ public class NotificationController {
     	Notification notification = notificationService.getNotificationByIdAndUser(notificationId, userId);
     	notificationService.markAsRead(notificationId, userId);
     	
-    	return new ResponseEntity<Notification>(notification, HttpStatus.OK);
+    	return new ResponseEntity<Notification>(notification, notification == null ? HttpStatus.NO_CONTENT : HttpStatus.OK);
     }
 
     @GetMapping("/user/{userId}")
