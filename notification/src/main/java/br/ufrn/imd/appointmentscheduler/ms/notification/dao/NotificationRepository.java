@@ -14,4 +14,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Inte
     
     @Query("select N from Notification N where N.userId = :userId")
     List<Notification> getAllByUserId(@Param("userId") int userId);
+    
+    @Query("select N from Notification N where N.id= :notification_Id and N.userId = :userId")
+    Notification getAllByNotificationIdAndUserId(@Param("notification_Id") int notificationId, @Param("userId") int userId);
+    
 }

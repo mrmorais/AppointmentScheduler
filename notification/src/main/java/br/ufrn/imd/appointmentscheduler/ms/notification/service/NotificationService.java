@@ -12,7 +12,9 @@ public interface NotificationService {
 
     void markAllAsRead(int userId);
 
-    Notification getNotificationById(int notificationId);
+	Notification getNotificationById(int notificationId);
+    
+    Notification getNotificationByIdAndUser(int notificationId, int userId);
 
     List<Notification> getAll(int userId);
 

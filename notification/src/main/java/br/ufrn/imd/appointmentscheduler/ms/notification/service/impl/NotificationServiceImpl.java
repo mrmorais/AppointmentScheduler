@@ -69,6 +69,12 @@ public class NotificationServiceImpl implements NotificationService {
     public List<Notification> getUnreadNotifications(int userId) {
         return notificationRepository.getAllUnreadNotifications(userId);
     }
+
+	@Override
+	public Notification getNotificationByIdAndUser(int notificationId, int userId) {
+		return notificationRepository.getAllByNotificationIdAndUserId(notificationId, userId);
+		
+	}
     
    
 

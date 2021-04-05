@@ -46,7 +46,7 @@ public class NotificationController {
     public ResponseEntity<Notification> getNotificationById(
     		@PathVariable("notificationId") int notificationId,
     		@PathVariable("userId") int userId) {
-    	Notification notification = notificationService.getNotificationById(notificationId);
+    	Notification notification = notificationService.getNotificationByIdAndUser(notificationId, userId);
     	notificationService.markAsRead(notificationId, userId);
     	
     	return new ResponseEntity<Notification>(notification, HttpStatus.OK);
