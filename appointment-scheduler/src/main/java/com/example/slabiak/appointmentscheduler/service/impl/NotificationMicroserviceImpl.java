@@ -1,11 +1,18 @@
 package com.example.slabiak.appointmentscheduler.service.impl;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -16,6 +23,8 @@ import com.example.slabiak.appointmentscheduler.entity.Invoice;
 import com.example.slabiak.appointmentscheduler.entity.Notification;
 import com.example.slabiak.appointmentscheduler.entity.user.User;
 import com.example.slabiak.appointmentscheduler.service.NotificationService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class NotificationMicroserviceImpl implements NotificationService {
@@ -38,12 +47,13 @@ public class NotificationMicroserviceImpl implements NotificationService {
 			httpPost.setHeader("Accept", "application/json");
 			httpPost.setHeader("Content-type", "application/json");
 			
-			String json = "{\r\n" +
-					" \"title\": \""+ title +"\"\r\n" +
-					" \"message\": \"" + message + "\"\r\n" +
-					" \"url\": \""+ url +"\"\r\n" +
-					" \"userId\" " + user.getId() + "\r\n" +
-					"}";
+			Map<String, Object> requestMap = new HashMap<String, Object>();
+			requestMap.put("title", title);
+			requestMap.put("message", message);
+			requestMap.put("url", url);
+			requestMap.put("userId", user.getId());
+			
+			String json = new ObjectMapper().writeValueAsString(requestMap);
 			
 			StringEntity stringEntity = new StringEntity(json);
 			httpPost.setEntity(stringEntity);
@@ -57,32 +67,121 @@ public class NotificationMicroserviceImpl implements NotificationService {
 
 	@Override
 	public void markAsRead(int notificationId, int userId) {
-		// TODO Auto-generated method stub
-		
+		try {
+			HttpPost httpPost = new HttpPost(NOTIFICATION_URL + "/user/" + 
+					String.valueOf(userId) + "/notification/" + 
+					String.valueOf(notificationId) + "/markAsRead");
+			httpPost.setHeader("Accept", "application/json");
+			httpPost.setHeader("Content-type", "application/json");
+			
+			httpClient.execute(httpPost);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public void markAllAsRead(int userId) {
-		// TODO Auto-generated method stub
+		try {
+			HttpPost httpPost = new HttpPost(NOTIFICATION_URL + "/user/" + 
+					String.valueOf(userId) + "/markAllAsRead");
+			httpPost.setHeader("Accept", "application/json");
+			httpPost.setHeader("Content-type", "application/json");
+			
+			httpClient.execute(httpPost);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 
 	@Override
 	public Notification getNotificationById(int notificationId) {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			HttpGet httpGet = new HttpGet(NOTIFICATION_URL + "/user/1/notification/" + String.valueOf(notificationId));
+			httpGet.setHeader("Accept", "application/json");
+			httpGet.setHeader("Content-type", "application/json");
+			
+			ResponseHandler<Notification> responseHandler = response -> {
+				Notification notification;
+				int status = response.getStatusLine().getStatusCode();
+				if (status >= 200 && status < 300) {
+					HttpEntity entity = response.getEntity();
+					String jsonNotifications = EntityUtils.toString(entity);
+					
+					notification = new ObjectMapper().readValue(jsonNotifications, new TypeReference<Notification>() {});
+				} else {
+					notification = null;
+				}
+				
+				return notification;
+			};
+			
+			return httpClient.execute(httpGet, responseHandler);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	@Override
 	public List<Notification> getAll(int userId) {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			HttpGet httpGet = new HttpGet(NOTIFICATION_URL + "/user/" + String.valueOf(userId));
+			httpGet.setHeader("Accept", "application/json");
+			httpGet.setHeader("Content-type", "application/json");
+			
+			ResponseHandler<List<Notification>> responseHandler = response -> {
+				List<Notification> notifications;
+				int status = response.getStatusLine().getStatusCode();
+				if (status >= 200 && status < 300) {
+					HttpEntity entity = response.getEntity();
+					String jsonNotifications = EntityUtils.toString(entity);
+					
+					notifications = new ObjectMapper().readValue(jsonNotifications, new TypeReference<List<Notification>>() {});
+				} else {
+					notifications = new ArrayList<Notification>();
+				}
+				
+				return notifications;
+			};
+			
+			return httpClient.execute(httpGet, responseHandler);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ArrayList<Notification>();
+		}
 	}
 
 	@Override
 	public List<Notification> getUnreadNotifications(int userId) {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			HttpGet httpGet = new HttpGet(NOTIFICATION_URL + "/user/" + String.valueOf(userId) + "/unread");
+			httpGet.setHeader("Accept", "application/json");
+			httpGet.setHeader("Content-type", "application/json");
+			
+			ResponseHandler<List<Notification>> responseHandler = response -> {
+				List<Notification> notifications;
+				int status = response.getStatusLine().getStatusCode();
+				if (status >= 200 && status < 300) {
+					HttpEntity entity = response.getEntity();
+					String jsonNotifications = EntityUtils.toString(entity);
+					
+					notifications = new ObjectMapper().readValue(jsonNotifications, new TypeReference<List<Notification>>() {});
+				} else {
+					notifications = new ArrayList<Notification>();
+				}
+				
+				return notifications;
+			};
+			
+			return httpClient.execute(httpGet, responseHandler);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ArrayList<Notification>();
+		}
 	}
 	
 

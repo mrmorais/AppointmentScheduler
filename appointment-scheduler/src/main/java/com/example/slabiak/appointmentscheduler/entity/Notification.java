@@ -1,6 +1,8 @@
 package com.example.slabiak.appointmentscheduler.entity;
 
 import com.example.slabiak.appointmentscheduler.entity.user.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -22,10 +24,12 @@ public class Notification extends BaseEntity {
     private String url;
 
     @Column(name = "is_read")
+    @JsonProperty("read")
     private boolean isRead;
 
     @ManyToOne
     @JoinColumn(name = "id_user")
+    @JsonIgnore
     private User user;
 
     public Notification() {
